@@ -9,22 +9,35 @@ from blog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 
+is_maintenance_mode = False
 
-@app.route("/")
+@app.route("/") 
 @app.route("/home")
 def home():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
     return render_template('home.html', posts=posts)
 
+@app.route('/maintenance')
+def maintenance():
+    return render_template("maintenance.html")
 
 @app.route("/about")
 def about():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     return render_template('about.html', title='About')
 
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = RegistrationForm()
@@ -40,6 +53,9 @@ def register():
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = LoginForm()
@@ -56,6 +72,9 @@ def login():
 
 @app.route("/logout")
 def logout():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     logout_user()
     return redirect(url_for('home'))
 
@@ -77,6 +96,9 @@ def save_picture(form_picture):
 @app.route("/account", methods=['GET', 'POST'])
 @login_required
 def account():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
@@ -98,6 +120,9 @@ def account():
 @app.route("/post/new", methods=['GET', 'POST'])
 @login_required
 def new_post():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     form = PostForm()
     if form.validate_on_submit():
         post = Post(title=form.title.data, content=form.content.data, author=current_user)
@@ -111,6 +136,9 @@ def new_post():
 
 @app.route("/post/<int:post_id>")
 def post(post_id):
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     post = Post.query.get_or_404(post_id)
     return render_template('post.html', title=post.title, post=post)
 
@@ -118,6 +146,9 @@ def post(post_id):
 @app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
 @login_required
 def update_post(post_id):
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
@@ -138,6 +169,9 @@ def update_post(post_id):
 @app.route("/post/<int:post_id>/delete", methods=['POST'])
 @login_required
 def delete_post(post_id):
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
@@ -149,6 +183,9 @@ def delete_post(post_id):
 
 @app.route("/user/<string:username>")
 def user_posts(username):
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
     posts = Post.query.filter_by(author=user)\
@@ -158,6 +195,9 @@ def user_posts(username):
 
 
 def send_reset_email(user):
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     token = user.get_reset_token()
     msg = Message('Password Reset Request',
                   sender='noreply@demo.com',
@@ -172,6 +212,9 @@ If you did not make this request then simply ignore this email and no changes wi
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = RequestResetForm()
@@ -185,6 +228,9 @@ def reset_request():
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
+    if is_maintenance_mode:
+        return redirect(url_for('maintenance'))
+
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     user = User.verify_reset_token(token)
