@@ -11,7 +11,7 @@ from flask_mail import Message
 
 is_maintenance_mode = True
 
-@app.route("/") 
+@app.route("/")
 @app.route("/home")
 def home():
     if is_maintenance_mode:
