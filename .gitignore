@@ -1,1 +1,3 @@
-__pycache__
+blog_env/
+blog/__pycache__/
+.vscode/
